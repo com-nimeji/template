@@ -1,0 +1,2 @@
+DROP DATABASE IF EXISTS license;
+CREATE DATABASE license;

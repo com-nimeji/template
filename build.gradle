@@ -1,0 +1,79 @@
+plugins {
+    id 'org.springframework.boot' version '2.7.0'
+    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+    id 'java'
+    id 'com.palantir.docker' version '0.33.0'
+}
+
+group = 'com.nimeji'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '17'
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+
+    acceptanceImplementation.extendsFrom implementation
+    acceptanceRuntimeOnly.extendsFrom runtimeOnly
+}
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    set('testcontainersVersion', "1.17.2")
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.assertj:assertj-core:3.22.0'
+    compileOnly 'org.projectlombok:lombok'
+    runtimeOnly 'org.postgresql:postgresql'
+    runtimeOnly "org.testcontainers:postgresql:1.16.3"
+    annotationProcessor 'org.projectlombok:lombok'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'org.testcontainers:postgresql'
+    acceptanceImplementation 'org.testcontainers:junit-jupiter'
+    acceptanceImplementation 'org.testcontainers:postgresql'
+    acceptanceImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    acceptanceRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.testcontainers:testcontainers-bom:${testcontainersVersion}"
+    }
+}
+
+sourceSets {
+    acceptance {
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+    }
+}
+
+docker {
+    name "com.nimeji/todo:accetance-test"
+    dockerfile file("Dockerfile")
+    files bootJar.archiveFile
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}
+
+tasks.register("acceptance", Test) {
+    dependsOn("assemble", "docker")
+    description = "Runs acceptance tests"
+    group = "verification"
+
+    testClassesDirs = sourceSets.acceptance.output.classesDirs
+    testClassesDirs = sourceSets.acceptance.output.classesDirs
+    classpath = sourceSets.acceptance.runtimeClasspath
+    useJUnitPlatform()
+}

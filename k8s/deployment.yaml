@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: template-app
+spec:
+  selector:
+    matchLabels:
+      app: template
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: template
+    spec:
+      containers:
+        - image: ghcr.io/com-nimeji/template:latest
+          name: template-app
+          ports:
+            - containerPort: 8080
+              name: template-app
